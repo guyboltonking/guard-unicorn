@@ -37,15 +37,16 @@ module Guard
       stop
 
       cmd = []
-      cmd << "bundle exec" if @enable_bundler
-      cmd << "unicorn_rails"
-      cmd << "-c #{@config_file}"
-      cmd << "-p #{@port}"
-      cmd << "-E #{@environment}"
-      cmd << "-D" if @run_as_daemon 
+      cmd += %w(bundle exec) if @enable_bundler
+      cmd << "unicorn_rails" <<
+              "-c" << @config_file <<
+              "-p" << @port.to_s <<
+              "-E" << @environment
+      cmd << "-D" if @run_as_daemon
 
-      @pid = ::Process.fork do
-        system "#{cmd.join " "}"
+      @pid = ::Process.fork
+      if @pid.nil?
+        ::Process.exec *cmd
       end
 
       success "Unicorn started."
